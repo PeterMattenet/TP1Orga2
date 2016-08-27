@@ -212,7 +212,7 @@ ctIter_next:
           jne .tomoElSiguiente
 
           ;como garcha subo? esto en phython no pasa
-        
+        git
 
         .tomoElSiguiente:
           inc [rdi + offset_current]        ;incremento el valor de current
