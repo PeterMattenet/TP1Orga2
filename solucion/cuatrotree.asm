@@ -73,28 +73,28 @@ ct_delete:
     .ciclo:
 
       .hijo1:
-        cmp [r12 + offset_child1], NULL     ;comparo si hijo1 es null
+        cmp qword [r12 + offset_child1], NULL     ;comparo si hijo1 es null
         je .hijo2                           ;si lo es, paso al siguiente
         lea r12, [r12 + offset_child1]      ;pongo en r12 la direccion de donde esta el nuevo puntero a borrar
         mov r12, [r12]                      ;pongo en r12 el puntero a borrar
         jmp .ciclo
 
       .hijo2:
-        cmp [r12 + offset_child2], NULL     ;comparo si hijo2 es null
+        cmp qword [r12 + offset_child2], NULL     ;comparo si hijo2 es null
         je .hijo3                           ;si lo es, paso al siguiente
         lea r12, [r12 + offset_child2]      ;pongo en r12 la direccion de donde esta el nuevo puntero a borrar
         mov r12, [r12]                      ;pongo en r12 el puntero a borrar
         jmp .ciclo
 
       .hijo3:
-        cmp [r12 + offset_child3], NULL     ;comparo si hijo3 es null
+        cmp qword [r12 + offset_child3], NULL     ;comparo si hijo3 es null
         je .hijo4                           ;si lo es, paso al siguiente
         lea r12, [r12 + offset_child3]      ;pongo en r12 la direccion de donde esta el nuevo puntero a borrar
         mov r12, [r12]                      ;pongo en r12 el puntero a borrar
         jmp .ciclo
 
       .hijo4:
-        cmp [r12 + offset_child4], NULL     ;comparo si hijo1 es null
+        cmp qword [r12 + offset_child4], NULL     ;comparo si hijo1 es null
         je .estallameElNodo                 ;si lo es, vamos a eliminar el nodo
         lea r12, [r12 + offset_child4]      ;pongo en r12 la direccion de donde esta el nuevo puntero a borrar
         mov r12, [r12]                      ;pongo en r12 el puntero a borrar
@@ -177,6 +177,7 @@ ctIter_next:
         push rcx
 
         mov rbp, rsp
+        xor rcx, rcx
 
         mov r12, [rdi + offset_tree]      ;pongo en r12 el puntero al arbol
         mov r12d, [r12 + offset_size]     ;ubico en los ultimos 4 bytes del registro el tamaño del arbol
@@ -187,7 +188,7 @@ ctIter_next:
         mov r12, [rdi + offset_node]      ;muevo a r12 el puntero al nodo sobre el que estoy iterando
 
         lea rax, [r12 + offset_child2]    ; ubico en rax la direccion del segundo elemento del arreglo de punteros hijos
-        lea rax, [rax + cl*8]             ;le incremento segun el current
+        lea rax, [rax + rcx*8]             ;le incremento segun el current
 
         cmp qword [rax], NULL             ;si el puntero hijo es null nos movemos o al siguiente valor del nodo, o subimos
         je .siguienteDelNodo
@@ -203,7 +204,7 @@ ctIter_next:
         .encontreElMinimo:
           mov [rdi + offset_node], rax    ;pongo en el struct del iterador pasado como parametro el nodo en cual freno la busqueda
           mov byte [rdi + offset_current], 0  ;pongo el current en 0
-          inc [rdi + offset_count]
+          inc dword [rdi + offset_count]
           jmp .fin
 
         .siguienteDelNodo:
@@ -211,12 +212,36 @@ ctIter_next:
           cmp cl, [rdi + offset_current]     ;comparo el current con cl
           jne .tomoElSiguiente
 
-          ;como garcha subo? esto en phython no pasa
-        git
+          mov rcx, [r12]                     ;muevo el puntero al padre del nodo a rcx
+          lea rax, [rcx + offset_child1]     ;pongo en rax la direccion del primer hijo
+          mov sil, 0                         ;creo un contador para ver el numero de hijo
+
+          .buscoEnQueHijoEstoy:
+            cmp [rax], r12                   
+            je .encontreMiHijo
+            inc sil
+            add rax, 8
+            jmp .buscoEnQueHijoEstoy
+
+          .encontreMiHijo:
+            cmp sil, 3
+            jne .eligoElNodo
+            mov r12, rcx
+            mov rcx, [r12]
+            lea rax, [rcx + offset_child1]     ;pongo en rax la direccion del primer hijo
+            mov sil, 0 
+            jmp .buscoEnQueHijoEstoy
+
+        .eligoElNodo:
+          mov [rdi + offset_node], rcx
+          inc sil
+          mov [rdi + offset_current], sil
+          inc dword [rdi + offset_count]
+          jmp .fin
 
         .tomoElSiguiente:
-          inc [rdi + offset_current]        ;incremento el valor de current
-          inc [rdi + offset_count]          ;incremento el valor del count
+          inc byte [rdi + offset_current]        ;incremento el valor de current
+          inc dword [rdi + offset_count]          ;incremento el valor del count
           jmp .fin
 
         .invalido:
@@ -234,12 +259,13 @@ ctIter_get:
         push rbp
         push r12
         xor r12, r12
+        xor rax, rax
 
         mov r12, [rdi + offset_node]      ;obtengo la direccion del nodo en el iterador
         lea r12, [r12 + offset_valor1]    ;muevo r12 hasta la direccion donde esta el primer valor
         mov al, [rdi + offset_current]    ;muevo a al el numero de current del iterador
 
-        lea r12, [r12 + al*4 ]            ;pongo en r12 la direccion de donde deberia estar el valor indicado
+        lea r12, [r12 + rax*4 ]            ;pongo en r12 la direccion de donde deberia estar el valor indicado
         mov eax, [r12]                    ;muevo a eax el valor dentro de dicha direccion
 
         pop r12
