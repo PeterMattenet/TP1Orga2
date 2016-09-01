@@ -1,6 +1,7 @@
 ; FUNCIONES de C
   extern malloc
   extern free
+  extern printf		
   extern fprintf
    
 ; FUNCIONES
@@ -122,51 +123,59 @@ ct_delete:
 ; ; void ct_aux_print(ctNode* node, FILE *pFile);
 ct_aux_print:
 		push rbp
-		push rcx
-		push r12
-		push r9
-
-		xor r9, r9 				;cleareo r9				
-		mov r9d, esi 			;gurdo el pfile
 		mov rbp, rsp 			;creo stack frame
-    sub rsp, 8
-		xor rcx, rcx
+		push rbx
+		push r12
+		push r13
+		sub rsp, 8
+
+		xor r13, r13 				;cleareo r13				
+		mov r13d, esi 			;gurdo el pfile
+		
+
+		xor rbx, rbx
 
 		mov r12, rdi 			;guardo el nodo en r12
+
 		cmp rdi, NULL 			;me fijo si el nodo es null
 		je .fin
-		mov cl, 0				;me guardo el largo del nodo en cl
+		mov bl, 0				;me guardo el largo del nodo en cl
 		.ciclo:
-			cmp cl, [r12 + offset_len]		;comparo a ver si es 0
+			
+			cmp bl, [r12 + offset_len]		;comparo a ver si es 0
 			je .casifin 					;voy a imprimir el child 3, si esnull no hace nada
-			lea rdi, [r12 + offset_child1 + rcx*8]	;guardo en rdi la direccion del primer hij
-			mov rdi, [r12]							;guado en rdi el puntero a este nodo hijo
-			mov rsi, r9 							;guardo en rsi  el puntero a pfile
+			lea rdi, [r12 + offset_child1 + rbx*8]	;guardo en rdi la direccion del primer hij
+			mov rdi, [rdi]							;guado en rdi el puntero a este nodo hijo
+			mov rsi, r13 							;guardo en rsi  el puntero a pfile
 			call ct_aux_print
-			lea rdx, [r12 + offset_valor1 + rcx*4]	;pongo en rdx la direccion del value 
+			lea rdx, [r12 + offset_valor1 + rbx*4]	;pongo en rdx la direccion del value 
 			mov edx, [rdx] 							;leo los primeros 4 bytes y lospongo en edx
 			mov rsi, msg
-			mov rdi, r9 
+			mov rdi, r13 
 			call fprintf
-			inc cl
+			inc bl
+			inc r9
 			jmp .ciclo
 		.casifin:
-			mov rsi, r9
-			mov rdi, [r12 + offset_child3]
+			mov rsi, r13
+			mov rdi, [r12 + offset_child4]
 			call ct_aux_print
 		.fin:
-      add rsp, 8
-      pop r9
+      		add rsp, 8
+      		pop r13
 			pop r12
-			pop rcx
+			pop rbx
 			pop rbp
 			ret
 
 ; ; =====================================
 ; ; void ct_print(ctTree* ct, FILE *pFile);
 ct_print:
-		mov rdi, [rdi + offset_node]
+		sub rsp, 8
+		mov r9, 0
+		mov rdi, [rdi + offset_root]
 		call ct_aux_print
+		add rsp, 8
         ret
 
 ; =====================================

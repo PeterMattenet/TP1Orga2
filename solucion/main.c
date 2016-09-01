@@ -54,11 +54,7 @@ int main (void){
     printf("Posicion del nodo %i\n", iter->node );
    	elem = ctIter_get(iter);
     printf("El siguiente es %i\n", elem); 
-     ctIter_next(iter);
-    printf("Avanze el iter \n");
-    printf("Posicion del nodo %i\n", iter->node );
-   	elem = ctIter_get(iter);
-    printf("El siguiente es %i\n", elem); 
+
      ctIter_next(iter);
     printf("Avanze el iter \n");
     printf("Posicion del nodo %i\n", iter->node );
@@ -72,7 +68,14 @@ int main (void){
 
     printf("Es valido? %i\n", ctIter_valid(iter)); 
     
-    //ct_print(arbolito, pFile);
+    printf("puntero del archivo %i\n", arbolito->root);
+    printf("puntero del archivo %i\n", arbolito->root->child[3]->child[0]);  
+    printf("puntero del archivo %i\n", arbolito->root->child[3]->child[1]);
+    printf("puntero del archivo %i\n", arbolito->root->child[3]->child[2]);
+    printf("puntero del archivo %i\n", arbolito->root->child[3]->child[3]);
+    
+    
+    ct_print(arbolito, pFile);
         
     fclose( pFile );
     return 0;    
