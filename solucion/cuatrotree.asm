@@ -19,6 +19,8 @@
 %define offset_root 0
 %define offset_size 8
 
+ 
+
 %define offset_padre 0
 %define offset_valor1 8
 %define offset_valor2 12
@@ -33,6 +35,9 @@
 %define offset_node 8
 %define offset_current 16
 %define offset_count 17
+
+section .data
+	msg: db '%i', 10
  
 section .text
 
@@ -46,11 +51,10 @@ ct_new:
 		sub rsp, 8		;alineo stack
 
 		mov r12, rdi	;guardo el puntero a tree
-		xor rdi, rdi	;cleareo rdi
 		mov rdi, 12		;pongo 12 bytes en el rdi para malloc
 		call malloc		
 
-		mov [rbx], rax 	;pongo la direccion de el nuevo tree en los primeros 8 bytes del puntero del tree parametro
+		mov [r12], rax 	;pongo la direccion de el nuevo tree en los primeros 8 bytes del puntero del tree parametro
 		mov qword [rax + offset_root], NULL
 		mov qword [rax + offset_size], NULL
 
@@ -115,13 +119,54 @@ ct_delete:
       ret
 
 ; ; =====================================
-; ; void ct_aux_print(ctNode* node);
+; ; void ct_aux_print(ctNode* node, FILE *pFile);
 ct_aux_print:
-        ret
+		push rbp
+		push rcx
+		push r12
+		push r9
+
+		xor r9, r9 				;cleareo r9				
+		mov r9d, esi 			;gurdo el pfile
+		mov rbp, rsp 			;creo stack frame
+    sub rsp, 8
+		xor rcx, rcx
+
+		mov r12, rdi 			;guardo el nodo en r12
+		cmp rdi, NULL 			;me fijo si el nodo es null
+		je .fin
+		mov cl, 0				;me guardo el largo del nodo en cl
+		.ciclo:
+			cmp cl, [r12 + offset_len]		;comparo a ver si es 0
+			je .casifin 					;voy a imprimir el child 3, si esnull no hace nada
+			lea rdi, [r12 + offset_child1 + rcx*8]	;guardo en rdi la direccion del primer hij
+			mov rdi, [r12]							;guado en rdi el puntero a este nodo hijo
+			mov rsi, r9 							;guardo en rsi  el puntero a pfile
+			call ct_aux_print
+			lea rdx, [r12 + offset_valor1 + rcx*4]	;pongo en rdx la direccion del value 
+			mov edx, [rdx] 							;leo los primeros 4 bytes y lospongo en edx
+			mov rsi, msg
+			mov rdi, r9 
+			call fprintf
+			inc cl
+			jmp .ciclo
+		.casifin:
+			mov rsi, r9
+			mov rdi, [r12 + offset_child3]
+			call ct_aux_print
+		.fin:
+      add rsp, 8
+      pop r9
+			pop r12
+			pop rcx
+			pop rbp
+			ret
 
 ; ; =====================================
-; ; void ct_print(ctTree* ct);
+; ; void ct_print(ctTree* ct, FILE *pFile);
 ct_print:
+		mov rdi, [rdi + offset_node]
+		call ct_aux_print
         ret
 
 ; =====================================
@@ -158,16 +203,23 @@ ctIter_first:
         push rbp
         push r12
         mov rbp, rsp
-        sub rsp, 8
+        
 
         mov r12, [rdi]      ;muevo a r12 el puntero al cuatree que deberia haber en los primeros 8 bytes del iterador al que rdi apunta
         mov r12, [r12]      ;ubico en r12 el puntero que deberia estar en los primeros 8 bytes del cuatree 
+        .ciclo:
+          cmp qword [r12 + offset_child1], NULL
+          je .fin
+          mov r12, [r12 + offset_child1]
+          jmp .ciclo
 
-        mov [rdi + offset_node], r12
+        .fin:
+          mov qword [rdi + offset_node], r12
+          mov dword [rdi + offset_count], 1
 
-        pop r12
-        pop rbp
-        ret
+          pop r12
+          pop rbp
+          ret
 
 ; =====================================
 ; void ctIter_next(ctIter* ctIt);
@@ -209,6 +261,7 @@ ctIter_next:
 
         .siguienteDelNodo:
           mov cl, [r12 + offset_len]         ;pongo en cl el largo del nodo
+          sub cl, 1                          ;le resto 1 porque soy un idiota que cuenta el largo de 1 al 3 en vez de 0 al 2
           cmp cl, [rdi + offset_current]     ;comparo el current con cl
           jne .tomoElSiguiente
 
@@ -234,7 +287,7 @@ ctIter_next:
 
         .eligoElNodo:
           mov [rdi + offset_node], rcx
-          inc sil
+                                                ;inc sil, en que momento esto te parecio una buena idea?
           mov [rdi + offset_current], sil
           inc dword [rdi + offset_count]
           jmp .fin
