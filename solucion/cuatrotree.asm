@@ -57,7 +57,7 @@ ct_new:
 
 		mov [r12], rax 	;pongo la direccion de el nuevo tree en los primeros 8 bytes del puntero del tree parametro
 		mov qword [rax + offset_root], NULL
-		mov qword [rax + offset_size], NULL
+		mov dword [rax + offset_size], NULL
 
 		add rsp, 8		;rearreglo la pila
 		pop r12
@@ -66,58 +66,69 @@ ct_new:
         ret
 
 ; =====================================
-; void ct_delete(ctTree** pct);
-ct_delete:
-		push rbp
-		push r12
+; ; void ct_aux_delete(ctNode* node);
+ct_aux_delete:
+    push rbp
+    push r12
 
-		mov rbp, rsp  ;creo stack frame
-		sub rsp, 8    ;alineo a 16 la pila
-    mov r12, [rdi]  ;guardo el puntero a la raiz 
+    mov rbp, rsp  ;creo stack frame
+    sub rsp, 8    ;alineo a 16 la pila
+    mov r12, rdi  ;guardo el puntero a la raiz 
 
     .ciclo:
 
       .hijo1:
         cmp qword [r12 + offset_child1], NULL     ;comparo si hijo1 es null
         je .hijo2                           ;si lo es, paso al siguiente
-        lea r12, [r12 + offset_child1]      ;pongo en r12 la direccion de donde esta el nuevo puntero a borrar
-        mov r12, [r12]                      ;pongo en r12 el puntero a borrar
-        jmp .ciclo
+        mov rdi, [r12 + offset_child1]      ;pongo en rdi el nuevo puntero a borrar
+        call ct_aux_delete
+        
 
       .hijo2:
         cmp qword [r12 + offset_child2], NULL     ;comparo si hijo2 es null
         je .hijo3                           ;si lo es, paso al siguiente
-        lea r12, [r12 + offset_child2]      ;pongo en r12 la direccion de donde esta el nuevo puntero a borrar
-        mov r12, [r12]                      ;pongo en r12 el puntero a borrar
-        jmp .ciclo
-
+        mov rdi, [r12 + offset_child2]      ;pongo en rdi el nuevo puntero a borrar
+        call ct_aux_delete
+        
       .hijo3:
         cmp qword [r12 + offset_child3], NULL     ;comparo si hijo3 es null
         je .hijo4                           ;si lo es, paso al siguiente
-        lea r12, [r12 + offset_child3]      ;pongo en r12 la direccion de donde esta el nuevo puntero a borrar
-        mov r12, [r12]                      ;pongo en r12 el puntero a borrar
-        jmp .ciclo
-
+        mov rdi, [r12 + offset_child3]      ;pongo en rdi el nuevo puntero a borrar
+        call ct_aux_delete
+        
       .hijo4:
         cmp qword [r12 + offset_child4], NULL     ;comparo si hijo1 es null
         je .estallameElNodo                 ;si lo es, vamos a eliminar el nodo
-        lea r12, [r12 + offset_child4]      ;pongo en r12 la direccion de donde esta el nuevo puntero a borrar
-        mov r12, [r12]                      ;pongo en r12 el puntero a borrar
-        jmp .ciclo
-
+        mov rdi, [r12 + offset_child4]      ;pongo en rdi el nuevo puntero a borrar
+        call ct_aux_delete
+        
       .estallameElNodo:
         mov rdi, r12                        ;pongo en rdi la direccion del nodo a liberar
-        mov r12, [r12]                      ;pongo en r12 el puntero al padre del nodo a liberar
-        cmp r12, NULL                       ;comparo padre con null
-        je .fin                             ;si es null entonces termino todo
         call free                           ;libero el nodo
-        jmp .ciclo                          ;repetimo'
-
+        
     .fin:
       add rsp, 8
       pop r12
       pop rbp
       ret
+
+; ; =====================================
+; void ct_delete(ctTree** pct);
+ct_delete:
+		push rbp
+    mov rbp, rsp
+    push r12
+    sub rsp, 8
+    mov r12, rdi
+    mov rdi, [rdi]
+    mov rdi, [rdi + offset_root]
+    call ct_aux_delete
+    mov rdi, [r12]
+    call free
+    add rsp, 8
+    pop r12
+    pop rbp
+    ret
 
 ; ; =====================================
 ; ; void ct_aux_print(ctNode* node, FILE *pFile);
