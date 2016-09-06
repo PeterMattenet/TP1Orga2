@@ -133,12 +133,46 @@ void ct_aux_fill(ctNode* currNode, uint32_t newVal) {
 
 }
 
-void ct_add(ctTree* ct, uint32_t newVal) {
-	ctNode* noditynoderino;
-	ctNode** punteroANodo;
 
-	punteroANodo = &(ct->root);
-	noditynoderino = ct_aux_search(punteroANodo, ct, newVal);
-	ct_aux_fill(noditynoderino, newVal);
-	ct->size= ct->size + 1;
+uint8_t ct_search(ctNode* currNode, uint32_t val) {
+	
+
+	if (currNode == NULL)
+	{
+		return 0;
+	}
+
+	uint8_t i = 0;
+	uint8_t length = currNode->len;
+	
+	while (i < length)
+	{
+		if (currNode->value[i] == val)
+		{
+			return 1;
+		}
+		if (currNode->value[i] > val)
+		{
+			return ct_search(currNode->child[i], val);
+		}
+		else
+		{
+			i++;
+		}
+	}
+	
+	return ct_search(currNode->child[i], val);
+
+}
+
+void ct_add(ctTree* ct, uint32_t newVal) {
+	if (ct_search(ct->root, newVal) == 0)
+	{
+		ctNode* noditynoderino;
+		ctNode** punteroANodo;
+		punteroANodo = &(ct->root);
+		noditynoderino = ct_aux_search(punteroANodo, ct, newVal);
+		ct_aux_fill(noditynoderino, newVal);
+		ct->size= ct->size + 1;
+	}
 }

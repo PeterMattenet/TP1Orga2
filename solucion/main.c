@@ -4,79 +4,37 @@
 #include "cuatrotree.h"
 
 int main (void){
-    char* name = "cambiameporotronombremegustoelnombreasiquelodejoasinomedigascomovivirmivida.txt";
+    char* name = "maintest.txt";
     FILE *pFile = fopen( name, "a" );
     fprintf(pFile,"-\n");
 
     ctTree* arbolito;
     ct_new(&arbolito);
-    printf("Cree el arbol\n");
-    ct_add(arbolito, 5);
+    
+    ct_add(arbolito, 10);
+    ct_add(arbolito,50);
+    
+    ct_add(arbolito,30);
+    ct_add(arbolito,5);
+    ct_add(arbolito,20);
+    ct_add(arbolito,40);
+    ct_add(arbolito,60);
+    ct_add(arbolito,19);
+    ct_add(arbolito,34);
     ct_add(arbolito,4);
-    
-    ct_add(arbolito,2);
-    ct_add(arbolito,7);
-    ct_add(arbolito,9);
-    ct_add(arbolito,8);
-    ct_add(arbolito,6);
     ctIter* iter = ctIter_new(arbolito);
-    printf("Cree el iter\n");
     ctIter_first(iter);
-    printf("Inicialize el iter\n");
-    uint32_t elem = ctIter_get(iter);
-    printf("%i\n", elem); 
-    printf("Largo del nodo %i\n", iter->node->len );
-    printf("Current del iter %i\n", iter->current );
-    printf("Count del iter %i\n", iter->count );
-    printf("Size del arbol %i\n", iter->tree->size );
+    uint32_t elem;
+    while (ctIter_valid(iter))
+    {
+        elem = ctIter_get(iter);
+        printf("%i\n", elem); 
+        ctIter_next(iter);
+    }
     
-    
-    ctIter_next(iter);
-    printf("Avanze el iter \n");
-    printf("Posicion del nodo %i\n", iter->node );
-    elem = ctIter_get(iter);
-    printf("El siguiente es %i\n", elem); 
+    ctIter_delete(iter);
+    ct_delete(&arbolito);
 
-    ctIter_next(iter);
-    printf("Avanze el iter \n");
-    printf("Posicion del nodo %i\n", iter->node );
-    elem = ctIter_get(iter);
-    printf("El siguiente es %i\n", elem); 
-
-	ctIter_next(iter);
-    printf("Avanze el iter \n");
-    printf("Posicion del nodo %i\n", iter->node );
-    elem = ctIter_get(iter);
-    printf("El siguiente es %i\n", elem); 
-    
-    ctIter_next(iter);
-    printf("Avanze el iter \n");
-    printf("Posicion del nodo %i\n", iter->node );
-   	elem = ctIter_get(iter);
-    printf("El siguiente es %i\n", elem); 
-
-     ctIter_next(iter);
-    printf("Avanze el iter \n");
-    printf("Posicion del nodo %i\n", iter->node );
-   	elem = ctIter_get(iter);
-    printf("El siguiente es %i\n", elem); 
-    printf("Es valido? %i\n", ctIter_valid(iter)); 
-    
-     ctIter_next(iter);
-    printf("Avanze el iter \n");
-    printf("Posicion del nodo %i\n", iter->node );
-
-    printf("Es valido? %i\n", ctIter_valid(iter)); 
-    
-    printf("puntero del archivo %i\n", arbolito->root);
-    printf("puntero del archivo %i\n", arbolito->root->child[3]->child[0]);  
-    printf("puntero del archivo %i\n", arbolito->root->child[3]->child[1]);
-    printf("puntero del archivo %i\n", arbolito->root->child[3]->child[2]);
-    printf("puntero del archivo %i\n", arbolito->root->child[3]->child[3]);
-    
-    
-    ct_print(arbolito, pFile);
-        
     fclose( pFile );
     return 0;    
 }

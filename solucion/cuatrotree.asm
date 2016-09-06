@@ -69,9 +69,10 @@ ct_new:
 ; ; void ct_aux_delete(ctNode* node);
 ct_aux_delete:
     push rbp
-    push r12
+   
 
     mov rbp, rsp  ;creo stack frame
+    push r12
     sub rsp, 8    ;alineo a 16 la pila
     mov r12, rdi  ;guardo el puntero a la raiz 
 
@@ -122,13 +123,17 @@ ct_delete:
     mov r12, rdi
     mov rdi, [rdi]
     mov rdi, [rdi + offset_root]
+    cmp rdi, NULL
+    je .fin
     call ct_aux_delete
-    mov rdi, [r12]
-    call free
-    add rsp, 8
-    pop r12
-    pop rbp
-    ret
+    
+    .fin:
+      mov rdi, [r12]
+      call free
+      add rsp, 8
+      pop r12
+      pop rbp
+      ret
 
 ; ; =====================================
 ; ; void ct_aux_print(ctNode* node, FILE *pFile);
